@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
 
-echo ${POSTGRES_HOST}
-echo ${POSTGRES_PORT}
-echo ${POSTGRES_DATABASE}
-echo ${POSTGRES_USER}
-echo ${POSTGRES_PASSWORD}
-echo ${DB_OWNER}
+echo "PGHOST ${PGHOST}"
+echo "PGPORT ${PGPORT}"
+echo "PGDATABASE ${PGDATABASE}"
+echo "PGUSER ${PGUSER}"
+echo "PGPASSWORD ${PGPASSWORD}"
+
+echo "DVDDBOWNER ${DVDDBOWNER}"
+echo "DVDDBOWNERPASSWORD ${DVDDBOWNERPASSWORD}"
+echo "DVDDATABASE ${DVDDATABASE}"
+
 
 export SCRIPT_DIR=$(dirname "$0")
-echo ${SCRIPT_DIR}
+echo "SCRIPT_DIR ${SCRIPT_DIR}"
 
-createdb -h ${POSTGRES_HOST} -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -O ${DB_OWNER} ${POSTGRES_DATABASE}
 
-psql -U ${POSTGRES_USER} -c "\l"
+echo "Executing User/DB SQL Commands..."
 
-psql -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE} < ./restore.sql
+# psql -U username -d database_name -h hostname -p port_number < /path/to/your/script.sql
+# psql --set=my_psql_var="${MY_VARIABLE}" -f your_script.sql
+psql -U ${PGUSER} \
+    --set=dvddatabase="$(echo ${DVDDATABASE} | tr '[:upper:]' '[:lower:]')" \
+    --set=pguser="$(echo ${PGUSER} | tr '[:upper:]' '[:lower:]')" \
+    --set=scriptdir="${SCRIPT_DIR}" \
+    -f ./restore_dyn.sql
 
-psql -U ${POSTGRES_USER} -c "\c dvdrental" -c "\dt"
+echo "Completed User/DB SQL Command Execution"
+
+
+psql -U ${PGUSER} -c "\l"
+psql -U ${PGUSER} -d ${DVDDATABASE} -c "\c ${DVDDATABASE}" -c "\dt"
